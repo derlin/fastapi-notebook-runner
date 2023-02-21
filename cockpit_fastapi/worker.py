@@ -1,10 +1,9 @@
 import logging
 import os
-import time
-from random import randint
 
 from celery import Celery
 from celery.result import AsyncResult
+from cockpit_fastapi.executor import execute_notebook
 
 REDIS_URL = os.environ.get("CELERY_BROKER_URL", "redis://localhost:6379")
 
@@ -18,8 +17,7 @@ logger.setLevel(logging.DEBUG)
 
 @celery_app.task(name="run_task")
 def run_celery_task():
-    time.sleep(30)
-    return f"hello {randint(10, 99)}"
+    return execute_notebook()
 
 
 def get_celery_task_status(task_id: str) -> AsyncResult:

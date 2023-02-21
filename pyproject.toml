@@ -11,6 +11,8 @@ python = "^3.11"
 fastapi = "^0.92"
 uvicorn = {extras = ["standard"], version = "^0.20"}
 celery = {extras = ["redis"], version = "^5.2.7"}
+ipykernel = "^6.21.2" # required to run the notebook
+nbconvert = "^7.2.9"
 
 
 [tool.poetry.group.dev.dependencies]
