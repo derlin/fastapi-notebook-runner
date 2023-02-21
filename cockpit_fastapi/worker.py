@@ -1,4 +1,3 @@
-import logging
 import os
 
 from celery import Celery
@@ -10,9 +9,10 @@ REDIS_URL = os.environ.get("CELERY_BROKER_URL", "redis://localhost:6379")
 celery_app = Celery(__name__)
 celery_app.conf.broker_url = REDIS_URL
 celery_app.conf.result_backend = REDIS_URL
+celery_app.conf.task_track_started = True
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+
+print(celery_app.conf)
 
 
 @celery_app.task(name="run_task")

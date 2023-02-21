@@ -40,20 +40,17 @@ def api_progress(task_id: Optional[str] = None):
     return _task_status_to_json(task_status)
 
 
-@app.get("/error", response_class=PlainTextResponse)
+@app.get("/output", response_class=PlainTextResponse)
 def api_error(task_id: Optional[str] = None):
     task_status = _task_status_or_http_error(task_id)
-    if task_status.status == celery.states.FAILURE:
-        return str(task_status.traceback)
-    return ""
+    match task_status.status:
+        case celery.states.FAILURE:
+            return f'❗❗Task {task_status.task_id} finished with failure ❗❗\n\n{task_status.traceback}\n'
+        case celery.states.SUCCESS:
+            return f'✅ Task {task_status.task_id} finished with success.\n'
 
-
-@app.get("/output", response_class=PlainTextResponse)
-def api_output(task_id: Optional[str] = None):
-    task_status = _task_status_or_http_error(task_id)
-    if task_status.status == celery.states.FAILURE:
-        return str(task_status.traceback)
-    return task_status.output
+    return PlainTextResponse(status_code=400,
+        content=f'Only tasks success/failure has output. Task {task_status.task_id} is in state {task_status.status}.')
 
 
 @app.get("/kill")
@@ -67,6 +64,7 @@ def _task_status_to_json(task_result: AsyncResult):
     return {
         "id": task_result.task_id,
         "status": task_result.status,
+        "state": task_result.state,
         "date": task_result.date_done,
     }
 
