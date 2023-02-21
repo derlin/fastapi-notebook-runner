@@ -1,6 +1,29 @@
+x-app-common: &app-common
+  image: fastapi
+  environment:
+    REDIS_URL: redis://redis:6379
+    SCRIPT_PATH: /app/script.ipynb
+  volumes:
+    - ./script.ipynb:/app/script.ipynb
+
 services:
-  cache:
+  redis:
     image: redis
     restart: always
     ports:
-      - '6379:6379'
+      - 6379:6379
+
+  celery:
+    <<: *app-common
+    command: celery
+    depends_on:
+      - redis
+
+  app:
+    <<: *app-common
+    command: fastapi
+    ports:
+      - 8080:8080
+    depends_on:
+      - redis
+      - celery

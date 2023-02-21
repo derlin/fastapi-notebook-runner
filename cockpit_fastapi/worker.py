@@ -4,7 +4,7 @@ from celery import Celery
 from celery.result import AsyncResult
 from cockpit_fastapi.executor import execute_notebook
 
-REDIS_URL = os.environ.get("CELERY_BROKER_URL", "redis://localhost:6379")
+REDIS_URL = os.environ.get("REDIS_URL", "redis://localhost:6379")
 
 celery_app = Celery(__name__)
 celery_app.conf.broker_url = REDIS_URL
