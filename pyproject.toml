@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "cockpit-fastapi"
+version = "0.1.0"
+description = ""
+authors = ["Lucy Linder <lucy.linder@sicpa.com>"]
+readme = "README.md"
+packages = [{include = "cockpit_fastapi"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.92"
+uvicorn = {extras = ["standard"], version = "^0.20"}
+celery = {extras = ["redis"], version = "^5.2.7"}
+
+
+[tool.poetry.group.dev.dependencies]
+watchdog = "*"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
