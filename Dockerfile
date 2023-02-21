@@ -57,6 +57,8 @@ RUN groupadd -g 1500 poetry && \
     useradd -m -u 1500 -g poetry poetry
 
 COPY --chown=poetry:poetry ./cockpit_fastapi /app/cockpit_fastapi
+COPY --chown=poetry:poetry ./script.ipynb /app/script.ipynb
+
 USER poetry
 WORKDIR /app
 

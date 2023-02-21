@@ -1,0 +1,18 @@
+redis:
+  image:
+    project: "@none@" # will be stripped
+    name: redis
+    tag: latest
+
+common:
+  project: llinder
+
+  image:
+    name: cockpit-fastapi
+    tag: latest
+
+  env:
+  secretEnv:
+
+  rest:
+    enabled: true

@@ -1,0 +1,32 @@
+{{ include "common.deployment.app" (list . "cockpit-fastapi.deployment") }}
+
+{{- define "cockpit-fastapi.deployment" -}}
+spec:
+  template:
+    spec:
+      containers:
+        - {{ include "common.container" . | nindent 10 }}
+        - {{ include "common.container" (list . "cockpit-fastapi.celery") | nindent 10 }}
+        - {{ include "cockpit-fastapi.redis" . | nindent 10 }}
+      volumes:
+        {{- include "__cm_configmount_volumes" . | nindent 6 }}
+        - name: redis-data
+          emptyDir: {}
+{{- end -}}
+
+
+{{- define "cockpit-fastapi.redis" -}}
+name: {{ include "common.fullname" . }}-redis
+image: {{ include "common.image.from" (list . .Values.redis.image) | replace "@none@/" "" }}
+ports:
+  - containerPort: 6379
+volumeMounts:
+  - mountPath: /data
+    name: redis-data
+{{- end -}}
+
+
+{{- define "cockpit-fastapi.celery" -}}
+name: {{ include "common.fullname" . }}-celery
+command: [/docker-entrypoint.sh, celery]
+{{- end -}}
