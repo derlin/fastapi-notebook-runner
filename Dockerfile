@@ -19,6 +19,8 @@ ENV PATH="$POETRY_HOME/bin:$VENV_PATH/bin:$PATH"
 
 # builder-base is used to build dependencies
 FROM python-base AS builder-base
+
+# hadolint ignore=DL3008
 RUN buildDeps="build-essential" \
     && apt-get update \
     && apt-get install --no-install-recommends -y \
@@ -62,5 +64,6 @@ COPY --chown=poetry:poetry ./script.ipynb /app/script.ipynb
 USER poetry
 WORKDIR /app
 
+# hadolint ignore=DL3025
 ENTRYPOINT /docker-entrypoint.sh $0 $@
 CMD [ "fastapi" ]

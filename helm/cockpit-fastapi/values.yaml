@@ -9,7 +9,6 @@ common:
 
   image:
     name: cockpit-fastapi
-    tag: latest
 
   env:
   secretEnv:
