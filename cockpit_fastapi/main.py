@@ -12,9 +12,15 @@ from cockpit_fastapi.worker import (
 )
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import PlainTextResponse
+from prometheus_client import Counter
 from pydantic import BaseModel
 from redis import Redis
 from redis.lock import Lock as RedisLock
+from starlette_exporter import PrometheusMiddleware, handle_metrics
+
+REDIS_TASK_ID_KEY = (
+    "current_task_id"  # Will store the last/current celery task ID in Redis
+)
 
 app = FastAPI()
 
@@ -24,13 +30,23 @@ celery_lock = RedisLock(redis_instance, name="task_lock")
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-REDIS_TASK_ID_KEY = "current_task_id"
+app.add_middleware(PrometheusMiddleware)
+app.add_route("/metrics", handle_metrics)
+
+execution_counter = Counter(
+    name="notebook_executions_total", documentation="Number of notebook executions"
+)
 
 
 class TaskResponse(BaseModel):
     id: str
     status: str
     date: Optional[datetime.datetime] = None
+
+
+@app.get("/ping")
+def api_ping() -> str:
+    return "I am alive"
 
 
 @app.get(
@@ -51,6 +67,7 @@ def api_start() -> TaskResponse:
             )
         task = run_celery_task.delay()
         redis_instance.set(REDIS_TASK_ID_KEY, task.task_id)
+        execution_counter.inc()  # Update prometheus metric
         return TaskResponse(id=task.task_id, status=celery.states.PENDING)
     finally:
         celery_lock.release()

@@ -1146,6 +1146,21 @@ docs = ["furo (>=2022.12.7)", "proselint (>=0.13)", "sphinx (>=6.1.3)", "sphinx-
 test = ["appdirs (==1.4.4)", "covdefaults (>=2.2.2)", "pytest (>=7.2.1)", "pytest-cov (>=4)", "pytest-mock (>=3.10)"]
 
 [[package]]
+name = "prometheus-client"
+version = "0.16.0"
+description = "Python client for the Prometheus monitoring system."
+category = "main"
+optional = false
+python-versions = ">=3.6"
+files = [
+    {file = "prometheus_client-0.16.0-py3-none-any.whl", hash = "sha256:0836af6eb2c8f4fed712b2f279f6c0a8bbab29f9f4aa15276b91c7cb0d1616ab"},
+    {file = "prometheus_client-0.16.0.tar.gz", hash = "sha256:a03e35b359f14dd1630898543e2120addfdeacd1a6069c1367ae90fd93ad3f48"},
+]
+
+[package.extras]
+twisted = ["twisted"]
+
+[[package]]
 name = "prompt-toolkit"
 version = "3.0.36"
 description = "Library for building powerful interactive command lines in Python"
@@ -1648,6 +1663,22 @@ anyio = ">=3.4.0,<5"
 full = ["httpx (>=0.22.0)", "itsdangerous", "jinja2", "python-multipart", "pyyaml"]
 
 [[package]]
+name = "starlette-exporter"
+version = "0.15.1"
+description = "Prometheus metrics exporter for Starlette applications."
+category = "main"
+optional = false
+python-versions = "*"
+files = [
+    {file = "starlette_exporter-0.15.1-py3-none-any.whl", hash = "sha256:24eeaef01f05ef973984704427f6e6a93d468f487b8b26ad77548d963affc9fe"},
+    {file = "starlette_exporter-0.15.1.tar.gz", hash = "sha256:3bde5d863effb26684210fe016a1ebf2b383efedf21a4b2f28585ec5064f4033"},
+]
+
+[package.dependencies]
+prometheus-client = ">=0.12"
+starlette = "*"
+
+[[package]]
 name = "tinycss2"
 version = "1.2.1"
 description = "A tiny CSS parser"
@@ -1976,4 +2007,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "4d53b4bd097d58fa7fc1191249e7bb95e02cbd7d3230b74a05d69aa18a3dcc32"
+content-hash = "1643447c886b7105e84f0da0e38aad16ce31b3f25d371d795b406ba98c0c0411"

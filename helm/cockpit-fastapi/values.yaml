@@ -13,5 +13,19 @@ common:
   env:
   secretEnv:
 
-  rest:
+  # use the monitoring port for everything. If we have both rest and monitoring ports, both pointing to 8080,
+  # kubernetes will only keep monitoring. Thus, the route (default to rest) will not work.
+  # So just keep rest.enabled=false and use monitoring everywhere
+  monitoringPort: 8080
+  route:
+    targetPort: monitoring
+
+  prometheus:
     enabled: true
+    path: /metrics
+
+  # FastAPI is fast
+  livenessProbe:
+    initialDelaySeconds: 5
+  readinessProbe:
+    initialDelaySeconds: 5
