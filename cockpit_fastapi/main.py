@@ -1,3 +1,4 @@
+import datetime
 import logging
 from typing import Optional
 
@@ -6,6 +7,7 @@ from celery.result import AsyncResult
 from cockpit_fastapi.worker import run_celery_task, get_celery_task_status, revoke_celery_task, REDIS_URL
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import PlainTextResponse
+from pydantic import BaseModel
 from redis import Redis
 from redis.lock import Lock as RedisLock
 
@@ -20,8 +22,17 @@ logger.setLevel(logging.DEBUG)
 REDIS_TASK_ID_KEY = "current_task_id"
 
 
-@app.get("/start")
-def api_start():
+class TaskResponse(BaseModel):
+    id: str
+    status: str
+    date: Optional[datetime.datetime] = None
+
+
+@app.get(
+    "/start",
+    name="Start task",
+    description="Trigger the execution of the notebook. Will fail if an execution is already in progress.")
+def api_start() -> TaskResponse:
     if not celery_lock.acquire(blocking_timeout=3):  # timeout in seconds
         raise HTTPException(status_code=401, detail="Could not acquire lock")
     try:
@@ -29,18 +40,26 @@ def api_start():
             raise HTTPException(status_code=401, detail=f"Another task is already running: {current_task.task_id}")
         task = run_celery_task.delay()
         redis_instance.set(REDIS_TASK_ID_KEY, task.task_id)
-        return {"task_id": task.task_id}
+        return TaskResponse(id=task.task_id, status=celery.states.PENDING)
     finally:
         celery_lock.release()
 
 
-@app.get("/progress")
-def api_progress(task_id: Optional[str] = None):
+@app.get(
+    "/progress",
+    name="Query status",
+    description="Get the status of the current task. Use the task_id parameter to query a specific task.")
+def api_progress(task_id: Optional[str] = None) -> TaskResponse:
     task_status = _task_status_or_http_error(task_id)
-    return _task_status_to_json(task_status)
+    return _task_status_to_response(task_status)
 
 
-@app.get("/output", response_class=PlainTextResponse)
+@app.get(
+    "/output",
+    name="Get output",
+    description="Get the status of the current task. Use the task_id parameter to query a specific task.",
+    response_class=PlainTextResponse,
+    response_description="The stacktrace in case of an error.")
 def api_error(task_id: Optional[str] = None):
     task_status = _task_status_or_http_error(task_id)
     match task_status.status:
@@ -53,20 +72,19 @@ def api_error(task_id: Optional[str] = None):
         content=f'Only tasks success/failure has output. Task {task_status.task_id} is in state {task_status.status}.')
 
 
-@app.get("/kill")
-def api_kill(task_id: Optional[str] = None):
-    task_status = _task_status_or_http_error(task_id)
+@app.get("/kill", name="Abort task", description="Kill the current task.")
+def api_kill():
+    task_status = _task_status_or_http_error(None)
     revoke_celery_task(task_status.task_id)
-    return _task_status_to_json(task_status)
+    return _task_status_to_response(task_status)
 
 
-def _task_status_to_json(task_result: AsyncResult):
-    return {
-        "id": task_result.task_id,
-        "status": task_result.status,
-        "state": task_result.state,
-        "date": task_result.date_done,
-    }
+def _task_status_to_response(task_result: AsyncResult) -> TaskResponse:
+    return TaskResponse(
+        id=task_result.task_id,
+        status=task_result.status,
+        date=task_result.date_done
+    )
 
 
 def _task_status_or_http_error(task_id: Optional[str]) -> AsyncResult:

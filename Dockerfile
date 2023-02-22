@@ -1,6 +1,7 @@
 # Dockerfile
 # Uses multi-stage builds requiring Docker 17.05 or higher
 # See https://docs.docker.com/develop/develop-images/multistage-build/
+# Inspiration: https://github.com/svx/poetry-fastapi-docker
 
 # Creating a python base with shared environment variables
 FROM python:3.11-slim-bullseye AS python-base
