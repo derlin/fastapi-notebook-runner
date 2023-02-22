@@ -3,7 +3,9 @@
 # See https://docs.docker.com/develop/develop-images/multistage-build/
 # Inspiration: https://github.com/svx/poetry-fastapi-docker
 
-# Creating a python base with shared environment variables
+# ===================================================
+# 'python-base' contains shared environment variables
+# ===================================================
 FROM python:3.11-slim-bullseye AS python-base
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
@@ -13,12 +15,14 @@ ENV PYTHONUNBUFFERED=1 \
     POETRY_HOME="/opt/poetry" \
     POETRY_VIRTUALENVS_IN_PROJECT=true \
     POETRY_NO_INTERACTION=1 \
-    PYSETUP_PATH="/opt/pysetup" \
-    VENV_PATH="/opt/pysetup/.venv"
+    WORKDIR="/opt/setup" \
+    VENV_PATH="/opt/setup/.venv"
 
 ENV PATH="$POETRY_HOME/bin:$VENV_PATH/bin:$PATH"
 
-# builder-base is used to build dependencies
+# ====================================================================
+# builder-base is used to build dependencies (poetry + only main deps)
+# ====================================================================
 FROM python-base AS builder-base
 
 # hadolint ignore=DL3008
@@ -39,18 +43,38 @@ RUN curl -sSL https://install.python-poetry.org | POETRY_HOME=${POETRY_HOME} pyt
 
 # We copy our Python requirements here to cache them
 # and install only runtime deps using poetry
-WORKDIR $PYSETUP_PATH
+WORKDIR $WORKDIR
 COPY ./poetry.lock ./pyproject.toml ./
-RUN poetry install --only main  # respects
+RUN poetry install --only main
 
-# 'production' stage uses the clean 'python-base' stage and copyies
-# in only our runtime deps that were installed in the 'builder-base'
+# ==============================================
+# 'development' is used for linting, tests, etc
+# ==============================================
+FROM builder-base as development
+
+RUN poetry install --with dev # also install dev dependencies
+COPY --chown=poetry:poetry ./cockpit_fastapi ./cockpit_fastapi
+
+# Check formatting
+RUN black --check cockpit_fastapi
+
+# Create a dummy file that will be copied into the final image, to ensure this stage is built
+# hadolint ignore=DL3059
+RUN touch ./test_successful
+
+# =====================================
+# 'production' stage is the final image
+# =====================================
 FROM python-base AS production
 ENV FASTAPI_ENV=production
 ENV WORKERS=1
 ENV LOG_LEVEL=INFO
 
+# Copy only the runtime dependencies from builder-base
 COPY --from=builder-base $VENV_PATH $VENV_PATH
+# Copy the dummy file from the development stage to ensure the latter is executed,
+# since in recent Docker implementations only stages used in the final images are processed.
+COPY --from=development $WORKDIR/test_successful /tmp
 
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
