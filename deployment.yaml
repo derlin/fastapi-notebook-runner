@@ -1,0 +1,6 @@
+id: ll-cockpit-fastapi
+version: 1.0.0
+
+installations:
+  - name: cockpit-fastapi
+    chart: sicpa/ll-cockpit-fastapi

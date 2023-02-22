@@ -26,6 +26,6 @@ common:
 
   # FastAPI is fast
   livenessProbe:
-    initialDelaySeconds: 5
+    initialDelaySeconds: 3
   readinessProbe:
-    initialDelaySeconds: 5
+    initialDelaySeconds: 3
