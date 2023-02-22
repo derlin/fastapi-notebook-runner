@@ -25,4 +25,4 @@ def get_celery_task_status(task_id: str) -> AsyncResult:
 
 
 def revoke_celery_task(task_id: str) -> None:
-    celery_app.control.revoke(task_id, terminate=True, signal='SIGKILL')
+    celery_app.control.revoke(task_id, terminate=True, signal="SIGKILL")

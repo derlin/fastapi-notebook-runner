@@ -46,3 +46,11 @@ uvicorn cockpit_fastapi.main:app --reload
 ```
 
 You now have access to the application on **port 8000**. Happy coding!
+
+## Before you push
+
+Ensure you have formatted your source files following PEP8.
+Simply run the following in your terminal (Dockerfile build will fail otherwise):
+```bash
+poetry run black cockpit_fastapi
+```
