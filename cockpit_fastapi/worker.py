@@ -16,7 +16,7 @@ print(celery_app.conf)
 
 
 @celery_app.task(name="run_task")
-def run_celery_task():
+def run_celery_task() -> str:
     return execute_notebook()
 
 

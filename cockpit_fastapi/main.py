@@ -90,13 +90,17 @@ def api_progress(task_id: Optional[str] = None) -> TaskResponse:
     response_class=PlainTextResponse,
     response_description="The stacktrace in case of an error.",
 )
-def api_error(task_id: Optional[str] = None) -> str:
+def api_error(task_id: Optional[str] = None, full: bool = False) -> str:
     task_status = _task_status_or_http_error(task_id)
     match task_status.status:
         case celery.states.FAILURE:
             return f"❗❗Task {task_status.task_id} finished with failure ❗❗\n\n{task_status.traceback}\n"
         case celery.states.SUCCESS:
-            return f"✅ Task {task_status.task_id} finished with success.\n"
+            return (
+                task_status.result
+                if full
+                else f"✅ Task {task_status.task_id} finished with success.\n"
+            )
 
     raise HTTPException(
         status_code=400,

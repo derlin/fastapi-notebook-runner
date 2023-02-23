@@ -9,9 +9,10 @@ with open(os.environ.get("SCRIPT_PATH", "script.ipynb")) as f:
     notebook = nbformat.read(f, as_version=4)
 
 
-def execute_notebook():
+def execute_notebook() -> str:
     try:
         processor.preprocess(notebook)
+        return nbformat.writes(notebook)
     except CellExecutionError:
         raise
 
