@@ -53,10 +53,10 @@ RUN poetry install --only main
 FROM builder-base as development
 
 RUN poetry install --with dev # also install dev dependencies
-COPY --chown=poetry:poetry ./cockpit_fastapi ./cockpit_fastapi
+COPY --chown=poetry:poetry nb_runner ./nb_runner
 
 # Check formatting
-RUN black --check cockpit_fastapi
+RUN black --check nb_runner
 
 # Create a dummy file that will be copied into the final image, to ensure this stage is built
 # hadolint ignore=DL3059
@@ -83,7 +83,7 @@ RUN chmod +x /docker-entrypoint.sh
 RUN groupadd -g 1500 poetry && \
     useradd -m -u 1500 -g poetry poetry
 
-COPY --chown=poetry:poetry ./cockpit_fastapi /app/cockpit_fastapi
+COPY --chown=poetry:poetry nb_runner /app/nb_runner
 COPY --chown=poetry:poetry ./script.ipynb /app/script.ipynb
 
 USER poetry

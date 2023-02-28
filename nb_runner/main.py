@@ -4,7 +4,7 @@ from typing import Optional
 
 import celery.states
 from celery.result import AsyncResult
-from cockpit_fastapi.worker import (
+from nb_runner.worker import (
     run_celery_task,
     get_celery_task_status,
     revoke_celery_task,

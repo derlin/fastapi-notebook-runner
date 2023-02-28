@@ -15,9 +15,9 @@ usage() {
 }
 
 if [[ "$1" == "celery" ]]; then
-  celery --app=cockpit_fastapi.worker.celery_app worker --concurrency=$WORKERS --loglevel=$LOG_LEVEL
+  celery --app=nb_runner.worker.celery_app worker --concurrency=$WORKERS --loglevel=$LOG_LEVEL
 elif [[ "$1" == "fastapi" ]]; then
-  gunicorn --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8080 -w $WORKERS cockpit_fastapi.main:app --log-level $LOG_LEVEL
+  gunicorn --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8080 -w $WORKERS nb_runner.main:app --log-level $LOG_LEVEL
 else
   echo "Unknown or missing sub-command: '$1'"
   usage

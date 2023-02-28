@@ -1,4 +1,4 @@
-# Exploration day: Cockpit FastAPI
+# Notebook Runner using FastAPI and Celery
 
 This repository contains the code of a small REST APi to execute a Jupyter Notebook on-demand.
 Hit `/start` and it will start the execution. Hit `/progress` to know the status of the execution. In case of failure,
@@ -39,10 +39,10 @@ Then, start both celery and FastAPI in reload mode (this means you can work on t
 ```bash
 # start celery
 # ! you need watchdog installed: brew install watchdog
-watchmedo auto-restart --directory=./cockpit_fastapi --pattern=worker.py  -- celery --app=cockpit_fastapi.worker.celery_app worker --concurrency=1 --loglevel=info
+watchmedo auto-restart --directory=./nb_runner --pattern=worker.py  -- celery --app=nb_runner.worker.celery_app worker --concurrency=1 --loglevel=info
  
 # start fastapi
-uvicorn cockpit_fastapi.main:app --reload
+uvicorn nb_runner.main:app --reload
 ```
 
 You now have access to the application on **port 8000**. Happy coding!
@@ -52,5 +52,5 @@ You now have access to the application on **port 8000**. Happy coding!
 Ensure you have formatted your source files following PEP8.
 Simply run the following in your terminal (Dockerfile build will fail otherwise):
 ```bash
-poetry run black cockpit_fastapi
+poetry run black nb_runner
 ```

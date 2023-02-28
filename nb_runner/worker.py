@@ -2,7 +2,7 @@ import os
 
 from celery import Celery
 from celery.result import AsyncResult
-from cockpit_fastapi.executor import execute_notebook
+from nb_runner.executor import execute_notebook
 
 REDIS_URL = os.environ.get("REDIS_URL", "redis://localhost:6379")
 
