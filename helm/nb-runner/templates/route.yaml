@@ -1,0 +1,19 @@
+{{- if .Values.route.enabled -}}
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: {{ .Release.Name }}
+  annotations: {{ toYaml .Values.route.annotations  | nindent 4 }}
+  labels: {{ include "nb_runner.labels" (dict "context" .) | nindent 4 }}
+spec:
+  host: {{ tpl (required "Missing route.host" .Values.route.host) . }}
+  port:
+    targetPort: rest
+  {{- with .Values.route.tls }}
+  tls: {{ tpl (toYaml .) $ | nindent 4 }}
+  {{- end }}
+  to:
+    kind: Service
+    name: {{ .Release.Name }}
+    weight: 1
+{{- end -}}

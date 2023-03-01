@@ -1,0 +1,11 @@
+{{- if .Values.env -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}
+  labels: {{ include "nb_runner.labels" (dict "context" .) | nindent 4 }}
+data:
+{{- range $k, $v := .Values.env }}
+  {{ $k }}: {{ $v | quote }}
+{{- end -}}
+{{- end -}}

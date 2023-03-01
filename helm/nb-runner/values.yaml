@@ -1,0 +1,73 @@
+## Deployment
+
+replicas: 1
+annotations:
+  prometheus/path: /metrics
+  prometheus/port: "8080"
+  prometheus/scrape: "true"
+volumes:
+  - name: redis-data
+    emptyDir: {}
+env: {}
+secrets: {}
+
+redis:
+  name: redis
+  port: 6379
+  image:
+    pullPolicy: Always
+    name: redis
+    tag: latest
+  livenessProbe: null
+  readinessProbe: null
+  volumeMounts:
+    - mountPath: /data
+      name: redis-data
+
+nb_runner:
+  image:
+    pullPolicy: Always
+    name: nb_runner
+    tag: latest
+
+  fastapi:
+    name: fastapi
+    port: 8080
+    portName: rest
+    livenessProbe:
+      httpGet:
+        path: /ping
+        port: 8080
+      initialDelaySeconds: 3
+      periodSeconds: 10
+      timeoutSeconds: 5
+    readinessProbe:
+      httpGet:
+        path: /ping
+        port: 8080
+      initialDelaySeconds: 3
+      periodSeconds: 10
+      timeoutSeconds: 5
+
+  celery:
+    name: celery
+    port: 55672
+    livenessProbe: null
+    readinessProbe: null
+    command: [/docker-entrypoint.sh, celery]
+
+
+route:
+  enabled: false
+  annotations: {}
+  host: null # supports templating
+  tls: {} # supports templating
+
+ingress:
+  enabled: false
+  host: null
+  path: /nb-runner
+  pathType: Prefix
+  className: null
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /

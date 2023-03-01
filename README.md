@@ -54,3 +54,51 @@ Simply run the following in your terminal (Dockerfile build will fail otherwise)
 ```bash
 poetry run black nb_runner
 ```
+
+## Running on a local k3d cluster
+
+First, start a k3d cluster with a local registry:
+```bash
+k3d registry create registry.localhost --port 5555
+k3d cluster create test --registry-use k3d-registry.localhost:5555 --api-port 6550 -p "80:80@loadbalancer"
+```
+
+To be able to push to the registry, you need to add the following to your `/etc/hosts`:
+```bash
+echo "127.0.0.1 k3d-registry.localhost" | sudo tee -a /etc/hosts
+```
+
+Now, build the image and push it to the local registry:
+```bash
+# Using regular docker
+docker build k3d-registry.localhost:5555/nb-runner .
+docker push k3d-registry.localhost:5555/nb-runner
+
+# Using buildx (you need amd64 image for k3d)
+docker buildx build --platform=linux/amd64 --pull --push -t k3d-registry.localhost:5555/nb-runner .
+```
+
+Final step, you need to configure a bit the Helm Chart for k3d. For that, create a `values-k3d.yaml` file and add:
+```yaml
+ingress:
+  enabled: true
+  host: nb-runner  # <- this needs to match an entry in /etc/hosts redirecting to 127.0.0.1
+  path: /
+
+nb_runner:
+  image:
+    name: k3d-registry.localhost:5555/nb-runner
+```
+
+With this, you are ready to deploy to k3d:
+```bash
+helm install nb-runner helm/nb-runner --values values-k3d.yaml
+```
+
+If you want to test the ingress, you need to add the following to your `etc/hosts` as well (you can change the host, just don't
+forget to change it in the `values-k3d.yaml` AND the `/etc/hosts`):
+```bash
+echo "127.0.0.1 nb-runner" | sudo tee -a /etc/hosts
+```
+
+With this entry, you can now go to http://nb-runner/docs. Congrats, you deployed to Kubernetes!

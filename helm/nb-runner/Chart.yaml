@@ -4,8 +4,3 @@ description: FastAPI service to run jupyter notebooks on demand
 
 version: 1.0.0
 appVersion: 1.0.0-dev
-
-dependencies:
-  - name: common
-    version: 3.5.0
-    repository: "@sicpa"
