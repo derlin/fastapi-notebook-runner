@@ -56,13 +56,13 @@ def api_ping() -> str:
 )
 def api_start() -> TaskResponse:
     if not celery_lock.acquire(blocking_timeout=3):  # timeout in seconds
-        raise HTTPException(status_code=401, detail="Could not acquire lock")
+        raise HTTPException(status_code=400, detail="Could not acquire lock")
     try:
         if (
             current_task := _get_task_status()
         ) is not None and not current_task.ready():
             raise HTTPException(
-                status_code=401,
+                status_code=400,
                 detail=f"Another task is already running: {current_task.task_id}",
             )
         task = run_celery_task.delay()
