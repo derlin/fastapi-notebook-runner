@@ -4,12 +4,6 @@ from typing import Optional
 
 import celery.states
 from celery.result import AsyncResult
-from nb_runner.worker import (
-    run_celery_task,
-    get_celery_task_status,
-    revoke_celery_task,
-    REDIS_URL,
-)
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import PlainTextResponse
 from prometheus_client import Counter
@@ -18,13 +12,15 @@ from redis import Redis
 from redis.lock import Lock as RedisLock
 from starlette_exporter import PrometheusMiddleware, handle_metrics
 
+from . import worker
+
 REDIS_TASK_ID_KEY = (
     "current_task_id"  # Will store the last/current celery task ID in Redis
 )
 
 app = FastAPI()
 
-redis_instance = Redis.from_url(url=REDIS_URL)
+redis_instance = Redis.from_url(url=worker.REDIS_URL)
 celery_lock = RedisLock(redis_instance, name="task_lock")
 
 logger = logging.getLogger(__name__)
@@ -65,7 +61,7 @@ def api_start() -> TaskResponse:
                 status_code=400,
                 detail=f"Another task is already running: {current_task.task_id}",
             )
-        task = run_celery_task.delay()
+        task = worker.run_celery_task.delay()
         redis_instance.set(REDIS_TASK_ID_KEY, task.task_id)
         execution_counter.inc()  # Update prometheus metric
         return TaskResponse(id=task.task_id, status=celery.states.PENDING)
@@ -111,7 +107,7 @@ def api_error(task_id: Optional[str] = None, full: bool = False) -> str:
 @app.get("/kill", name="Abort task", description="Kill the current task.")
 def api_kill():
     task_status = _task_status_or_http_error(None)
-    revoke_celery_task(task_status.task_id)
+    worker.revoke_celery_task(task_status.task_id)
     return _task_status_to_response(task_status)
 
 
@@ -123,7 +119,7 @@ def _task_status_to_response(task_result: AsyncResult) -> TaskResponse:
 
 def _task_status_or_http_error(task_id: Optional[str]) -> AsyncResult:
     if task_id is not None:
-        if (status := get_celery_task_status(task_id)) is not None:
+        if (status := worker.get_celery_task_status(task_id)) is not None:
             return status
         raise HTTPException(status_code=400, detail=f"Could not find task {task_id}")
     else:
@@ -135,5 +131,5 @@ def _task_status_or_http_error(task_id: Optional[str]) -> AsyncResult:
 def _get_task_status() -> Optional[AsyncResult]:
     if (res := redis_instance.get(REDIS_TASK_ID_KEY)) is not None:
         task_id = res.decode("utf-8")
-        return get_celery_task_status(task_id)
+        return worker.get_celery_task_status(task_id)
     return None
