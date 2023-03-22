@@ -2,7 +2,7 @@
 name = "cockpit-fastapi"
 version = "0.1.0"
 description = ""
-authors = ["Lucy Linder <lucy.linder@sicpa.com>"]
+authors = ["Lucy Linder <lucy.derlin@gmail.com>"]
 readme = "README.md"
 #packages = [{include = "nb_runner"}]
 
