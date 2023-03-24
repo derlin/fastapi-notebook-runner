@@ -40,7 +40,7 @@ ports:
 {{ with .root.volumeMounts }}volumeMounts: {{ toYaml . | nindent 2 }}{{ println "" }}{{ end -}}
 envFrom:
   {{- if .context.Values.env }}
-  - configmapRef:
+  - configMapRef:
       name: {{ .context.Release.Name }}
   {{- end }}
   {{- if .context.Values.secrets }}
